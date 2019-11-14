@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e6d4e933-81f6-4eae-b930-a31d2dfa284f">
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="scatter-gather-appFlow" doc:id="1d05ae37-43e1-4171-88f5-5cc34478234c" >
+		<http:listener doc:name="Http Listener" doc:id="74844ab4-516a-4077-ac39-cb84160e5de2" config-ref="HTTP_Listener_config" path="/demo"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="f1e4d4cc-8add-49b9-97c2-8827a3a7f17f" timeout="6000">
+			<route >
+				<http:request method="GET" doc:name="Newyork Timezone" doc:id="de11d4e7-9afd-4899-9727-36a3f5b54343" url="http://worldtimeapi.org/api/timezone/America/New_york">
+					<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"Kolkata" : "Kolkata",
+	"Asia" : "Asia"
+}]]]></http:uri-params>
+				</http:request>
+				<ee:transform doc:name="Transform Message" doc:id="b57c56e3-79d2-47fa-913e-a90b2e4e261a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Europe Timezone" doc:id="fa4b45b5-a05e-4eb2-8396-3b7099bfe111" url="http://worldtimeapi.org/api/timezone/Europe/London"/>
+				<ee:transform doc:name="Transform Message" doc:id="9f3b8363-0330-4d83-8c5e-6f55dd924837" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Denver Timezone" doc:id="0b3fd4d3-7ec3-42b9-8533-5f19274d2ab9" url="http://worldtimeapi.org/api/timezone/America/Denver"/>
+				<ee:transform doc:name="Transform Message" doc:id="0dbbbcc5-7b5d-41bc-bdd8-1473646a3ebc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="43e140d5-2462-4c52-a059-d8c405b8605c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[payload[0].payload,payload[1].payload,payload[2].payload]
+    
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="world time zone info" doc:id="c3db8096-4c29-4c68-a544-5e5c89806948" message="#[payload]"/>
+	</flow>
+</mule>
